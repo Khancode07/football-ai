@@ -18,15 +18,20 @@ The model was trained on **15,645 competitive international matches** from the y
 
 ## 🚀 Running the App locally
 
-1. **Activate the Virtual Environment**:
+1. **Activate the Virtual Environment** (or create one):
    ```bash
+   python -m venv .venv
    source .venv/bin/activate
    ```
-2. **Start the Web Dashboard**:
+2. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. **Start the Web Dashboard**:
    ```bash
    python worldcup.py
    ```
-3. Open `http://127.0.0.1:5001` in your browser.
+4. Open `http://127.0.0.1:5001` in your browser.
 
 ## 🧠 Retraining the Model
 
