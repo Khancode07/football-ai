@@ -27,6 +27,7 @@ except FileNotFoundError:
 
 # Ensure datetime format and sort chronologically
 df_results['date'] = pd.to_datetime(df_results['date'])
+df_results = df_results.dropna(subset=['home_score', 'away_score'])
 df_results = df_results[df_results['date'].dt.year >= 2000].sort_values('date').reset_index(drop=True)
 
 # ─────────────────────────────────────────────────────────────
@@ -56,9 +57,9 @@ df_results['tour_tier'] = df_results['tournament'].apply(get_tour_weight)
 # 3. COMPUTE TARGET (HOME WIN, DRAW, AWAY WIN)
 # ─────────────────────────────────────────────────────────────
 def get_result(row):
-    if row['home_score'] > row['away_score']: return 'Home Win'
-    if row['home_score'] < row['away_score']: return 'Away Win'
-    return 'Draw'
+    if row['home_score'] > row['away_score']: return 0
+    if row['home_score'] < row['away_score']: return 1
+    return 2
 
 df_results['result'] = df_results.apply(get_result, axis=1)
 
@@ -87,9 +88,9 @@ for idx, row in df_results.iterrows():
     h_elo_list.append(h_elo)
     a_elo_list.append(a_elo)
     
-    if row['result'] == 'Home Win':
+    if row['result'] == 0:
         score_h, score_a = 1, 0
-    elif row['result'] == 'Away Win':
+    elif row['result'] == 1:
         score_h, score_a = 0, 1
     else:
         score_h, score_a = 0.5, 0.5
@@ -122,12 +123,20 @@ for idx, row in df_results.iterrows():
     home = row['home_team']
     away = row['away_team']
     
-    hs = team_stats.setdefault(home, {'history': [], 'gd': []})
-    as_ = team_stats.setdefault(away, {'history': [], 'gd': []})
+    hs = team_stats.setdefault(home, {'history': [], 'comp_history': [], 'gd': []})
+    as_ = team_stats.setdefault(away, {'history': [], 'comp_history': [], 'gd': []})
     
     # Form: win rate in last 10 games
     h_form = sum([1 for r in hs['history'][-10:] if r == 'W']) / 10.0 if hs['history'] else 0.45
     a_form = sum([1 for r in as_['history'][-10:] if r == 'W']) / 10.0 if as_['history'] else 0.45
+    
+    # Comp Form: win rate in last 10 competitive games
+    h_comp = sum([1 for r in hs['comp_history'][-10:] if r == 'W']) / 10.0 if hs['comp_history'] else 0.45
+    a_comp = sum([1 for r in as_['comp_history'][-10:] if r == 'W']) / 10.0 if as_['comp_history'] else 0.45
+    
+    # Overall Win Rate
+    h_wr = sum([1 for r in hs['history'] if r == 'W']) / len(hs['history']) if hs['history'] else 0.45
+    a_wr = sum([1 for r in as_['history'] if r == 'W']) / len(as_['history']) if as_['history'] else 0.45
     
     # Goal Difference Average
     h_gd = np.mean(hs['gd'][-10:]) if hs['gd'] else 0.0
@@ -141,8 +150,12 @@ for idx, row in df_results.iterrows():
     h2h_aw = sum([1 for m in recent_h2h if m == away])
     h2h_d  = sum([1 for m in recent_h2h if m == 'Draw'])
     
-    feats['h_form'].append(h_form)
-    feats['a_form'].append(a_form)
+    feats.setdefault('h_form', []).append(h_form)
+    feats.setdefault('a_form', []).append(a_form)
+    feats.setdefault('h_comp', []).append(h_comp)
+    feats.setdefault('a_comp', []).append(a_comp)
+    feats.setdefault('h_wr', []).append(h_wr)
+    feats.setdefault('a_wr', []).append(a_wr)
     feats['h_gd'].append(h_gd)
     feats['a_gd'].append(a_gd)
     feats['h2h_hw'].append(h2h_hw if home == pair[0] else h2h_aw)
@@ -150,12 +163,14 @@ for idx, row in df_results.iterrows():
     feats['h2h_d'].append(h2h_d)
     
     # Update state for NEXT match
-    if row['result'] == 'Home Win':
-        hs['history'].append('W'); as_['history'].append('L'); hist.append(home)
-    elif row['result'] == 'Away Win':
-        hs['history'].append('L'); as_['history'].append('W'); hist.append(away)
-    else:
-        hs['history'].append('D'); as_['history'].append('D'); hist.append('Draw')
+    res_h = 'W' if row['result'] == 0 else ('L' if row['result'] == 1 else 'D')
+    res_a = 'L' if row['result'] == 0 else ('W' if row['result'] == 1 else 'D')
+    win_team = home if row['result'] == 0 else (away if row['result'] == 1 else 'Draw')
+    
+    hs['history'].append(res_h); as_['history'].append(res_a); hist.append(win_team)
+    if row['tournament'] != 'Friendly':
+        hs['comp_history'].append(res_h)
+        as_['comp_history'].append(res_a)
         
     gd = row['home_score'] - row['away_score']
     hs['gd'].append(gd)
@@ -163,6 +178,10 @@ for idx, row in df_results.iterrows():
 
 df_results['h_form'] = feats['h_form']
 df_results['a_form'] = feats['a_form']
+df_results['h_comp'] = feats['h_comp']
+df_results['a_comp'] = feats['a_comp']
+df_results['h_wr'] = feats['h_wr']
+df_results['a_wr'] = feats['a_wr']
 df_results['h_gd'] = feats['h_gd']
 df_results['a_gd'] = feats['a_gd']
 df_results['h2h_hw'] = feats['h2h_hw']
@@ -185,10 +204,17 @@ df_ml['home_enc'] = le_home.fit_transform(df_ml['home_team'])
 df_ml['away_enc'] = le_away.fit_transform(df_ml['away_team'])
 df_ml['tour_enc'] = le_tour.fit_transform(df_ml['tournament'])
 
-# We need dummy values for FIFA ratings / xG since we simplified the pipeline
-# We fill these with neutral values so the array shape matches the 34 features expected by worldcup.py
-df_ml['h_rat'] = 65.0
-df_ml['a_rat'] = 65.0
+# FIFA 22 player data to restore team_rating which is highly predictive
+try:
+    fifa_df = pd.read_csv('archive/players_22.csv', low_memory=False)
+    team_rating = fifa_df.groupby('nationality_name')['overall'].mean().round(1)
+    team_rating_dict = team_rating.to_dict()
+except FileNotFoundError:
+    team_rating_dict = {}
+
+df_ml['h_rat'] = df_ml['home_team'].map(team_rating_dict).fillna(65.0)
+df_ml['a_rat'] = df_ml['away_team'].map(team_rating_dict).fillna(65.0)
+
 df_ml['h_xg'] = 1.2
 df_ml['a_xg'] = 1.2
 
@@ -201,13 +227,10 @@ df_ml['rat_diff'] = df_ml['h_rat'] - df_ml['a_rat']
 df_ml['xg_diff'] = df_ml['h_xg'] - df_ml['a_xg']
 df_ml['gd_diff'] = df_ml['h_gd'] - df_ml['a_gd']
 
-df_ml['h_comp'] = df_ml['h_form']
-df_ml['a_comp'] = df_ml['a_form']
-df_ml['comp_diff'] = df_ml['form_diff']
-
-df_ml['h_form2'] = df_ml['h_form']
-df_ml['a_form2'] = df_ml['a_form']
-df_ml['form_diff2'] = df_ml['form_diff']
+df_ml['comp_diff'] = df_ml['h_comp'] - df_ml['a_comp']
+df_ml['h_form2'] = df_ml['h_wr']
+df_ml['a_form2'] = df_ml['a_wr']
+df_ml['form_diff2'] = df_ml['h_form2'] - df_ml['a_form2']
 
 df_ml['h_xga'] = df_ml['h_xg']
 df_ml['a_xga'] = df_ml['a_xg']
@@ -232,10 +255,9 @@ df_ml = df_ml.fillna(0)
 X = df_ml[feature_cols]
 y = df_ml['result']
 
-# Train/Test Split (Time-based: train on past, test on latest)
-split_idx = int(len(X) * 0.9)
-X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
-y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
+# Train/Test Split
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # ─────────────────────────────────────────────────────────────
 # 7. TRAIN ENSEMBLE MODEL
@@ -252,14 +274,9 @@ ensemble = VotingClassifier(
     weights=[2, 1.5, 1]
 )
 
-# Encode targets for XGBoost
-le_y = LabelEncoder()
-y_train_enc = le_y.fit_transform(y_train)
-y_test_enc = le_y.transform(y_test)
-
-ensemble.fit(X_train, y_train_enc)
+ensemble.fit(X_train, y_train)
 preds = ensemble.predict(X_test)
-acc = accuracy_score(y_test_enc, preds)
+acc = accuracy_score(y_test, preds)
 
 print("="*60)
 print(f"  ENSEMBLE ACCURACY: {acc*100:.2f}%")
@@ -269,19 +286,21 @@ print("="*60)
 # 8. EXPORT ARTIFACTS
 # ─────────────────────────────────────────────────────────────
 # Retrain on ALL data for production
-ensemble.fit(X, le_y.fit_transform(y))
+ensemble.fit(X, y)
 
 # Build lookup dictionaries for worldcup.py to use in live predictions
 latest_stats = {}
 for team in df_results['home_team'].unique():
     hs = team_stats.get(team, {'history':[], 'gd':[]})
     h_form = sum([1 for r in hs['history'][-10:] if r == 'W']) / 10.0 if hs['history'] else 0.45
+    h_comp = sum([1 for r in hs['comp_history'][-10:] if r == 'W']) / 10.0 if hs['comp_history'] else 0.45
+    h_wr = sum([1 for r in hs['history'] if r == 'W']) / len(hs['history']) if hs['history'] else 0.45
     h_gd = np.mean(hs['gd'][-10:]) if hs['gd'] else 0.0
     latest_stats[team] = {
         'elo': elo_dict.get(team, 1500),
-        'win_rate': h_form,
+        'win_rate': h_wr,
         'recent_form': h_form,
-        'comp_recent': h_form,
+        'comp_recent': h_comp,
         'gd_avg': h_gd,
         'rolling_xg': 1.2,
         'rolling_xga': 1.2
@@ -297,7 +316,7 @@ encoders = {
     'le_home': le_home,
     'le_away': le_away,
     'le_tour': le_tour,
-    'team_rating': {},  # Simplified
+    'team_rating': team_rating_dict,
     'latest_stats': latest_stats,
     'h2h_history': h2h_export,
     'elo_ratings': elo_dict,
