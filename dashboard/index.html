@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Obsidian Analytics | AI Football Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505; /* Level 0 Background from Style Guidance */
+            color: #e2e2e8;
+            overflow-x: hidden;
+        }
+        .glass-card {
+            background: rgba(30, 32, 36, 0.6);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .neon-glow-primary {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+        }
+        .neon-glow-secondary {
+            box-shadow: 0 0 15px rgba(169, 249, 0, 0.15);
+        }
+        .radar-grid {
+            stroke: rgba(132, 148, 149, 0.2);
+            stroke-width: 1;
+        }
+        /* Custom scrollbar for high-density feel */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0c0e12;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b494b;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#111317",
+                        "surface-container-high": "#282a2e",
+                        "on-secondary-fixed": "#121f00",
+                        "outline": "#849495",
+                        "on-error-container": "#ffdad6",
+                        "surface-container": "#1e2024",
+                        "inverse-on-surface": "#2f3035",
+                        "primary-fixed": "#7df4ff",
+                        "on-surface": "#e2e2e8",
+                        "inverse-primary": "#006970",
+                        "tertiary-container": "#e1d2ff",
+                        "on-tertiary-container": "#7213ff",
+                        "tertiary-fixed-dim": "#d1bcff",
+                        "surface-container-highest": "#333539",
+                        "on-secondary": "#223600",
+                        "on-background": "#e2e2e8",
+                        "tertiary": "#faf3ff",
+                        "primary-container": "#00f0ff",
+                        "error": "#ffb4ab",
+                        "inverse-surface": "#e2e2e8",
+                        "primary": "#dbfcff",
+                        "surface-tint": "#00dbe9",
+                        "secondary-fixed": "#a9f900",
+                        "surface-container-lowest": "#0c0e12",
+                        "secondary-container": "#a9f900",
+                        "on-tertiary": "#3c0090",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "secondary-fixed-dim": "#94db00",
+                        "on-surface-variant": "#b9cacb",
+                        "on-secondary-fixed-variant": "#334f00",
+                        "surface-variant": "#333539",
+                        "secondary": "#ffffff",
+                        "surface-container-low": "#1a1c20",
+                        "surface-bright": "#37393e",
+                        "on-tertiary-fixed-variant": "#5700c9",
+                        "on-primary-fixed": "#002022",
+                        "surface": "#111317",
+                        "primary-fixed-dim": "#00dbe9",
+                        "on-primary-container": "#006970",
+                        "outline-variant": "#3b494b",
+                        "tertiary-fixed": "#e9ddff",
+                        "on-tertiary-fixed": "#23005b",
+                        "surface-dim": "#111317",
+                        "on-secondary-container": "#496f00",
+                        "on-primary": "#00363a",
+                        "on-primary-fixed-variant": "#004f54"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xl": "64px",
+                        "xs": "4px",
+                        "margin-mobile": "16px",
+                        "lg": "40px",
+                        "gutter": "24px",
+                        "base": "8px",
+                        "margin-desktop": "32px",
+                        "md": "24px",
+                        "sm": "12px",
+                        "side-nav-w": "260px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "stat-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "stat-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.03em", "fontWeight": "800"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background">
+<!-- SideNavBar Anchor -->
+<aside class="bg-surface-container-lowest/90 backdrop-blur-2xl fixed left-0 top-0 h-full w-[260px] border-r border-outline-variant/20 shadow-2xl shadow-primary-container/5 z-[60] flex flex-col py-lg transition-all duration-300 ease-in-out" id="sidebar">
+<div class="px-md mb-xl">
+<h1 class="font-headline-md text-headline-md text-primary-container tracking-tighter">Tactical Room</h1>
+<p class="font-label-md text-label-md text-on-surface-variant opacity-70">V2.4 Live Telemetry</p>
+</div>
+<nav class="flex-1 space-y-xs">
+<a class="bg-primary-container/10 text-primary-container border-r-4 border-primary-container flex items-center gap-sm px-md py-sm transition-all duration-300 ease-in-out group" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-sm px-md py-sm hover:bg-surface-container-high/50 hover:text-on-surface transition-all duration-300 ease-in-out group" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-md text-label-md">Match Analytics</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-sm px-md py-sm hover:bg-surface-container-high/50 hover:text-on-surface transition-all duration-300 ease-in-out group" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+<span class="font-label-md text-label-md">Player Scouting</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-sm px-md py-sm hover:bg-surface-container-high/50 hover:text-on-surface transition-all duration-300 ease-in-out group" href="#">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span class="font-label-md text-label-md">AI Predictions</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-sm px-md py-sm hover:bg-surface-container-high/50 hover:text-on-surface transition-all duration-300 ease-in-out group" href="#">
+<span class="material-symbols-outlined" data-icon="tactic">tactic</span>
+<span class="font-label-md text-label-md">Team Strategy</span>
+</a>
+</nav>
+<div class="px-md mt-auto pt-lg space-y-sm">
+<button class="w-full py-sm px-md bg-primary-container text-on-primary-fixed font-label-md text-label-md rounded-lg active:scale-95 transition-transform">
+                Upgrade to Pro
+            </button>
+<div class="flex flex-col gap-xs pt-base">
+<a class="text-on-surface-variant flex items-center gap-sm px-md py-xs hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="help">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-sm px-md py-xs hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="logout">logout</span>
+<span class="font-label-md text-label-md">Logout</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Anchor -->
+<header class="bg-background/80 backdrop-blur-xl fixed top-0 left-[260px] right-0 z-50 border-b border-outline-variant/30 shadow-sm flex justify-between items-center px-margin-desktop py-base">
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-sm">
+<span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Manchester City vs. Real Madrid</span>
+</div>
+<div class="px-sm py-xs bg-surface-container-highest rounded text-label-md font-label-md text-primary-container">
+                UCL QUARTER-FINALS
+            </div>
+</div>
+<div class="flex items-center gap-lg">
+<div class="hidden md:flex items-center gap-sm bg-surface-container px-md py-xs rounded-full border border-outline-variant/20">
+<span class="material-symbols-outlined text-outline" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm font-body-sm w-48 text-on-surface placeholder-on-surface-variant/50" placeholder="Search analytics..." type="text"/>
+</div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary-container transition-colors" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary-container transition-colors" data-icon="settings">settings</span>
+<img alt="Chief Analyst Profile" class="w-8 h-8 rounded-full border border-primary-container/30 cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC68BCH7PobhnSvrJBblmnISMJlDrv9sTLDClgTS3f70w4pjSNHVCmYjkSWmsorSx7YmhxPkpbFg-2D_Ldw1o5znQUhsJkIWQ7jqilRyFQ1PXvY3rdRiDHB14snrjtlhevfJo2FnCQGR4716cyyT5SbjWWg09TfwTaSZiZsYhDJmDuyfNxUhtWrCZjUgusUWW2il7d-0WokHxkaTs7u5Dxy1zZ_dTJtPBHsnrES6pboTQS2rpuuR3dHiOJcliYpY6G8VvzQU11FT-s"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[260px] pt-[80px] p-margin-desktop min-h-screen">
+<!-- Dashboard Header / Overview -->
+<div class="mb-lg flex justify-between items-end">
+<div>
+<h2 class="font-display-lg text-display-lg tracking-tighter text-primary-container">Live Intelligence</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Real-time tactical deep-dive using Obsidian-Engine telemetry.</p>
+</div>
+<div class="flex gap-sm">
+<button class="flex items-center gap-xs px-md py-sm glass-card border border-outline-variant/30 text-label-md font-label-md hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="ios_share">ios_share</span> Export Report
+                </button>
+<button class="flex items-center gap-xs px-md py-sm bg-primary-container text-on-primary-fixed font-label-md text-label-md rounded-lg shadow-lg shadow-primary-container/20">
+<span class="material-symbols-outlined text-[18px]" data-icon="bolt">bolt</span> Live Simulation
+                </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Win Probability Card -->
+<div class="col-span-12 lg:col-span-8 glass-card rounded-xl p-lg flex flex-col justify-center relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-1 bg-surface-container-highest">
+<div class="h-full bg-primary-container transition-all duration-1000" style="width: 64%;"></div>
+</div>
+<div class="flex justify-between items-center mb-lg">
+<div class="text-center">
+<span class="font-label-md text-label-md text-on-surface-variant block mb-base">MANCHESTER CITY</span>
+<h3 class="font-stat-lg text-stat-lg text-primary-container">64%</h3>
+</div>
+<div class="flex-1 px-xl relative">
+<div class="h-[2px] w-full bg-outline-variant/30 flex items-center justify-center">
+<div class="px-md py-xs bg-surface-container-high rounded-full border border-outline-variant/50 text-label-md font-label-md">VS</div>
+</div>
+</div>
+<div class="text-center">
+<span class="font-label-md text-label-md text-on-surface-variant block mb-base">REAL MADRID</span>
+<h3 class="font-stat-lg text-stat-lg text-secondary-fixed">36%</h3>
+</div>
+</div>
+<div class="flex flex-col gap-base">
+<div class="flex justify-between text-label-md font-label-md text-on-surface-variant uppercase tracking-widest">
+<span>Win Prob. Over Time</span>
+<span class="text-primary-container">Trending Up +4.2%</span>
+</div>
+<div class="h-24 w-full opacity-50">
+<!-- Simple visual trend indicator using SVG -->
+<svg class="w-full h-full stroke-primary-container fill-none stroke-2" preserveaspectratio="none" viewbox="0 0 1000 100">
+<path d="M0,80 Q50,75 100,60 T200,65 T300,50 T400,55 T500,40 T600,45 T700,30 T800,25 T900,20 T1000,15"></path>
+</svg>
+</div>
+</div>
+<!-- Atmospheric Background Shader Placeholder -->
+
+</div>
+<!-- Match Status Quick Stats -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-gutter">
+<div class="glass-card rounded-xl p-md flex items-center gap-md">
+<div class="p-sm bg-primary-container/10 rounded-lg">
+<span class="material-symbols-outlined text-primary-container" data-icon="sports_soccer">sports_soccer</span>
+</div>
+<div>
+<div class="text-label-md font-label-md text-on-surface-variant">Possession</div>
+<div class="text-headline-sm font-headline-sm">58% <span class="text-body-sm font-body-sm text-outline">/ 42%</span></div>
+</div>
+</div>
+<div class="glass-card rounded-xl p-md flex items-center gap-md">
+<div class="p-sm bg-secondary-fixed/10 rounded-lg">
+<span class="material-symbols-outlined text-secondary-fixed" data-icon="target">target</span>
+</div>
+<div>
+<div class="text-label-md font-label-md text-on-surface-variant">Shots on Target</div>
+<div class="text-headline-sm font-headline-sm">7 <span class="text-body-sm font-body-sm text-outline">/ 4</span></div>
+</div>
+</div>
+<div class="glass-card rounded-xl p-md flex items-center gap-md">
+<div class="p-sm bg-tertiary-container/10 rounded-lg">
+<span class="material-symbols-outlined text-tertiary-container" data-icon="query_stats">query_stats</span>
+</div>
+<div>
+<div class="text-label-md font-label-md text-on-surface-variant">Expected Goals (xG)</div>
+<div class="text-headline-sm font-headline-sm">2.41 <span class="text-body-sm font-body-sm text-outline">/ 1.18</span></div>
+</div>
+</div>
+</div>
+<!-- Player Comparison Radar -->
+<div class="col-span-12 lg:col-span-6 glass-card rounded-xl p-lg min-h-[400px] flex flex-col">
+<div class="flex justify-between items-start mb-lg">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Tactical Profile</h4>
+<p class="font-label-md text-label-md text-on-surface-variant">Comparative Performance Radar</p>
+</div>
+<div class="flex gap-md">
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="font-label-md text-label-md">K. De Bruyne</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed"></span>
+<span class="font-label-md text-label-md">J. Bellingham</span>
+</div>
+</div>
+</div>
+<div class="flex-1 flex justify-center items-center relative">
+<svg class="w-full max-w-[300px] transform -rotate-18" viewbox="0 0 200 200">
+<!-- Radar Grids -->
+<circle class="radar-grid fill-none" cx="100" cy="100" r="80"></circle>
+<circle class="radar-grid fill-none" cx="100" cy="100" r="60"></circle>
+<circle class="radar-grid fill-none" cx="100" cy="100" r="40"></circle>
+<line class="radar-grid" x1="100" x2="100" y1="20" y2="180"></line>
+<line class="radar-grid" x1="20" x2="180" y1="100" y2="100"></line>
+<!-- Player 1: De Bruyne (Primary Blue) -->
+<polygon class="fill-primary-container/20 stroke-primary-container stroke-2" points="100,30 160,80 140,150 60,150 40,80"></polygon>
+<!-- Player 2: Bellingham (Secondary Lime) -->
+<polygon class="fill-secondary-fixed/20 stroke-secondary-fixed stroke-2" points="100,50 140,100 120,160 80,160 60,100"></polygon>
+</svg>
+<!-- Labels -->
+<div class="absolute inset-0 pointer-events-none">
+<span class="absolute top-2 left-1/2 -translate-x-1/2 font-label-md text-label-md uppercase opacity-50">Passing</span>
+<span class="absolute bottom-2 left-1/2 -translate-x-1/2 font-label-md text-label-md uppercase opacity-50">Defending</span>
+<span class="absolute right-2 top-1/2 -translate-y-1/2 font-label-md text-label-md uppercase opacity-50">Dribbling</span>
+<span class="absolute left-2 top-1/2 -translate-y-1/2 font-label-md text-label-md uppercase opacity-50">Shooting</span>
+</div>
+</div>
+</div>
+<!-- AI Insights / Heatmap -->
+<div class="col-span-12 lg:col-span-6 glass-card rounded-xl overflow-hidden flex flex-col">
+<div class="p-lg border-b border-outline-variant/20 flex justify-between items-center">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Zone Dominance</h4>
+<p class="font-label-md text-label-md text-on-surface-variant">Live Spatial AI Interpretation</p>
+</div>
+<span class="material-symbols-outlined text-outline cursor-pointer" data-icon="fullscreen">fullscreen</span>
+</div>
+<div class="flex-1 relative bg-[#0c0e12]">
+<!-- Simulated Football Pitch Heatmap -->
+<div class="absolute inset-0 opacity-40">
+<div class="absolute inset-x-md inset-y-sm border border-outline-variant/30 rounded-sm">
+<div class="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-16 border border-outline-variant/30"></div>
+<div class="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-16 border border-outline-variant/30"></div>
+<div class="absolute left-1/2 top-0 bottom-0 border-l border-outline-variant/30"></div>
+<div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border border-outline-variant/30"></div>
+</div>
+</div>
+<!-- Heatmap Glows -->
+<div class="absolute top-[30%] left-[60%] w-32 h-32 bg-primary-container/30 blur-3xl rounded-full animate-pulse"></div>
+<div class="absolute bottom-[20%] left-[20%] w-24 h-24 bg-secondary-fixed/20 blur-2xl rounded-full"></div>
+<img class="w-full h-full object-cover mix-blend-overlay opacity-60" data-alt="A top-down view of a futuristic digital football pitch dashboard with a glowing heatmap overlay. Intense blue and lime green neon gradients indicate high-intensity player movement zones. The background is a deep, dark obsidian charcoal, maintaining a professional and advanced sports analytics aesthetic. Data points are crisp and clear against the high-contrast surface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmoYcbFCLBSWLycK3I3WIn_584uhXQ6nOUj6cY90m_cabyqFSVX4AozglWH9gCiBFaD9JBvvb6qTGcGW-BCZF4iVzadQKpwHidkJv3wiPV51n7BFcUgS3JWLw_w6Q1hZyB0rxofieXULZQ1VxG1v_9J56Zbut7Es2Z-TnMk4iz1FChZ8CfQARrgOACToll8r3Vws2sExL5YxAIXS2qvZpS-5R8gC92Uce-XU8QFeN6ydtW6MHjIzXftY-YbPEYaeuE2RjySSkTtrA"/>
+<div class="absolute bottom-md right-md bg-surface-container-highest/80 backdrop-blur-md border border-outline-variant/30 p-sm rounded-lg">
+<div class="font-label-md text-label-md text-primary-container">ALERT: HIGH PRESS DETECTED</div>
+<div class="text-body-sm font-body-sm">City transitioning to 3-2-2-3</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Live Feed / Recent Events Section -->
+<div class="mt-lg grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<div class="glass-card rounded-xl p-md flex flex-col gap-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-primary-container">TACTICAL SHIFT</span>
+<span class="text-outline text-[10px]">72'</span>
+</div>
+<p class="text-body-md font-body-md">Walker moving into inverted wing-back role to counter Madrid's counter-attack width.</p>
+</div>
+<div class="glass-card rounded-xl p-md flex flex-col gap-sm border-l-2 border-l-secondary-fixed">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-secondary-fixed">AI PREDICTION</span>
+<span class="text-outline text-[10px]">68'</span>
+</div>
+<p class="text-body-md font-body-md">Win probability for City spiked +8% after Rodri regained possession in the final third.</p>
+</div>
+<div class="glass-card rounded-xl p-md flex flex-col gap-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant">SUBSCRIPTION ALERT</span>
+<span class="text-outline text-[10px]">NOW</span>
+</div>
+<p class="text-body-md font-body-md">Real Madrid preparing Modric. Expected Impact: +12% Pass Completion in central zones.</p>
+</div>
+</div>
+</main>
+<!-- Contextual FAB (Hidden on most screens as per instructions, but useful for 'Ask AI') -->
+<button class="fixed bottom-margin-desktop right-margin-desktop w-14 h-14 bg-primary-container text-on-primary-fixed rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 neon-glow-primary">
+<span class="material-symbols-outlined text-[28px]" data-icon="auto_awesome">auto_awesome</span>
+</button>
+<script>
+        // Micro-interactions and Lightweight Atmospheric Effects
+        document.addEventListener('mousemove', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const x = e.clientX;
+            const width = window.innerWidth;
+            
+            // Subtle parallax or interaction could go here
+            // But staying clean as requested.
+        });
+
+        // Simulating live data updates
+        setInterval(() => {
+            const stats = document.querySelectorAll('.font-stat-lg');
+            if(stats.length > 0) {
+                // Occasional minor fluctuations for "Live" feel
+                if(Math.random() > 0.8) {
+                    // Update City logic or Madrid logic subtly
+                }
+            }
+        }, 5000);
+    </script>
+</body></html>

@@ -1,0 +1,42 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Model artifacts (large binary files)
+*.pkl
+*.h5
+*.onnx
+
+# Data files
+*.db
+*.sqlite3
+*.csv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
